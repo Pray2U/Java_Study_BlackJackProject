@@ -68,11 +68,11 @@ class Player {
         player_card.add(card);
     }
 
-    public List<Card> getPlayer_card() {
+    public List<Card> getCard() {
         return player_card;
     }
 
-    public int playerScore() {
+    public int Score() {
         int score = 0;
         int numAces = 0;
 
@@ -92,48 +92,39 @@ class Player {
     }
 }
 
-class Dealer {
-    public List<Card> dealer_card;
+class Dealer extends Player {
     private boolean firstCardHidden;
 
     public Dealer() {
-        dealer_card = new ArrayList<>();
         firstCardHidden = true;
-    }
-
-    public void addCard(Card card) {
-        dealer_card.add(card);
-    }
-
-    public List<Card> getDealer_card() {
-        return dealer_card;
     }
 
     public void revealFirstCard() {
         firstCardHidden = false;
     }
 
-    public boolean isFirstCardHidden() {
-        return firstCardHidden;
+    public String getDealerCard() {
+        if (firstCardHidden) {
+            return "XX " + super.getCard().get(1); // 첫 번째 카드는 비공개로 출력
+        } else {
+            return super.getCard().toString();
+        }
     }
+}
 
-    public int dealerScore() {
-        int score = 0;
-        int numAces = 0;
+class GameResult {
+    public void displayGameResult(BlackJack game) {
+        int playerScore = game.player.Score();
+        int dealerScore = game.dealer.Score();
 
-        for (Card card : dealer_card) {
-            score += card.getValue();
-            if ("A".equals(card.rank)) {
-                numAces++;
-            }
+        System.out.println("Player's Score: " + playerScore);
+        System.out.println("Dealer's Score: " + dealerScore);
+
+        if (playerScore > 21 || (dealerScore <= 21 && dealerScore > playerScore)) {
+            System.out.println("Dealer Wins...");
+        } else {
+            System.out.println("Player Wins!");
         }
-
-        while (score > 21 && numAces > 0) {
-            score -= 10;
-            numAces--;
-        }
-
-        return score;
     }
 }
 
@@ -142,6 +133,7 @@ class BlackJack {
     public Dealer dealer = new Dealer();
     public Player player = new Player();
     public Scanner scanner = new Scanner(System.in);
+    public boolean gameEnd = false;
 
     public void InitialCards() { // 딜러와 플레이어에게 초기 카드 2장 나눠줌
         player.addCard(deck.drawCard());
@@ -150,21 +142,33 @@ class BlackJack {
         dealer.addCard(deck.drawCard());
     }
 
-    public void displayCards(boolean hideDealerCard) {
+    public void displayCards(boolean HiddenCard) {
         System.out.println(
-                "# Dealer: " + (hideDealerCard ? (dealer.isFirstCardHidden() ? "X" : dealer.getDealer_card()) : dealer.getDealer_card()) +
-                "\n# Player: " + player.getPlayer_card() +
+                "# Dealer: " + (HiddenCard ? dealer.getDealerCard() : dealer.getCard()) +
+                "\n# Player: " + player.getCard() +
                 "\n------------------------------------------"
         );
     }
 
     public boolean getPlayerChoice() {
+        if (gameEnd) {
+            return false; // 게임 종료 시 플레이어는 카드를 더 받을 수 없음
+        }
+
         System.out.print("Hit or Stand? (H/S): ");
         String input = scanner.next();
 
         if ("H".equals(input) || "h".equals(input)) {
             player.addCard(deck.drawCard());
-            return true;
+
+            int playerScore = player.Score();
+            if (playerScore > 21) {
+                System.out.println("※ Player Busted! Game Over. ※");
+                gameEnd = true; // 게임 종료 플래그 설정
+                return false; // 게임 종료
+            }
+
+            return true; // 계속 진행
         } else if ("S".equals(input) || "s".equals(input)) {
             return false;
         } else {
@@ -175,17 +179,17 @@ class BlackJack {
 
     public void finishDealerCard() {
         dealer.revealFirstCard();
+        displayCards(false);
+
+        while (!gameEnd && dealer.Score() < 17) {
+            dealer.addCard(deck.drawCard());
+            displayCards(false);
+        }
     }
 
-    public void Winner() {
-        int playerScore = player.playerScore();
-        int dealerScore = dealer.dealerScore();
-
-        if (playerScore > 21 || (dealerScore <= 21 && dealerScore >= playerScore)) {
-            System.out.println("Dealer Wins...");
-        } else {
-            System.out.println("Player Wins!");
-        }
+    public void displayGameResult() {
+        GameResult gameResult = new GameResult();
+        gameResult.displayGameResult(this);
     }
 
     public void startGame() {
@@ -198,8 +202,7 @@ class BlackJack {
         }
 
         finishDealerCard();
-        displayCards(false);
-        Winner();
+        displayGameResult();
     }
 }
 
