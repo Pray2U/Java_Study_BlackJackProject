@@ -80,12 +80,16 @@ public class BlackjackGame {
         Deck deck = new Deck();
         Hand playerHand = new Hand();
         Hand dealerHand = new Hand();
+        boolean playerBusted = false;
 
         // 초기 카드 배분
         playerHand.addCard(deck.drawCard());
         playerHand.addCard(deck.drawCard());
         dealerHand.addCard(deck.drawCard());
         dealerHand.addCard(deck.drawCard());
+
+        // 초기 카드 배분 후 21점 체크
+        checkForBlackjack(playerHand, dealerHand);
 
         // 플레이어의 턴
         while (true) {
@@ -98,17 +102,22 @@ public class BlackjackGame {
             if (action.equalsIgnoreCase("H")) {
                 playerHand.addCard(deck.drawCard());
                 if (playerHand.getScore() > 21) {
-                    System.out.println("Player busts. Dealer wins.");
-                    System.exit(0);
+                    playerBusted = true;
+                    break;
                 }
+                // 플레이어의 턴 후 21점 체크
+                checkForBlackjack(playerHand, dealerHand);
             } else {
                 break;
             }
         }
 
         // 딜러의 턴
-        while (dealerHand.getScore() < 17) {
+        while (!playerBusted && dealerHand.getScore() < 17) {
             dealerHand.addCard(deck.drawCard());
+
+            // 딜러의 턴 후 21점 체크
+            checkForBlackjack(playerHand, dealerHand);
         }
 
         // 결과 출력
@@ -117,12 +126,28 @@ public class BlackjackGame {
         System.out.println("# Player: " + playerHand + " (" + playerHand.getScore() + ")");
         System.out.println("-------------------------------------------------");
 
-        if (dealerHand.getScore() > 21 || playerHand.getScore() > dealerHand.getScore()) {
+        if (playerBusted) {
+            System.out.println("Player busts. Dealer wins.");
+        } else if (dealerHand.getScore() > 21 || playerHand.getScore() > dealerHand.getScore()) {
             System.out.println("Player wins!");
         } else if (playerHand.getScore() < dealerHand.getScore()) {
             System.out.println("Dealer wins...");
         } else {
             System.out.println("It's a tie.");
+        }
+    }
+
+    private static void checkForBlackjack(Hand playerHand, Hand dealerHand) {
+        if (playerHand.getScore() == 21 || dealerHand.getScore() == 21) {
+            System.out.println("Blackjack! Game Over.");
+            System.out.println("# Dealer: " + dealerHand + " (" + dealerHand.getScore() + ")");
+            System.out.println("# Player: " + playerHand + " (" + playerHand.getScore() + ")");
+            if (playerHand.getScore() == 21) {
+                System.out.println("Player wins with a Blackjack!");
+            } else {
+                System.out.println("Dealer wins with a Blackjack!");
+            }
+            System.exit(0);
         }
     }
 }
