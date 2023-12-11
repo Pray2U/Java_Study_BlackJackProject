@@ -34,7 +34,7 @@ class Card {
 }
 
 class CardDeck {
-    public List<Card> cards;
+    private final List<Card> cards;
 
     public CardDeck() {
         cards = new ArrayList<>();
