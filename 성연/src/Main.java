@@ -13,16 +13,18 @@ class Card {
     }
 
     public int getValue() {
-        switch (rank) {
-            case "A":
-                return 11;
-            case "K":
-            case "Q":
-            case "J":
-                return 10;
-            default:
-                return Integer.parseInt(rank);
+        int value;
+        try {
+            value = Integer.parseInt(rank);
+        } catch (NumberFormatException e) {
+            // A, K, Q, J 예외 처리
+            if ("A".equals(rank)) {
+                value = 11;
+            } else {
+                value = 10; // K, Q, J
+            }
         }
+        return value;
     }
 
     @Override
